@@ -23,3 +23,22 @@
 # All that matters is that your final data is written to an SQLite database
 # called "data.sqlite" in the current working directory which has at least a table
 # called "data".
+
+# page to start scrape "http://rnli.org/aboutus/lifeboatsandstations/stations/Pages/Stations-a-z.aspx"
+# xpath "//*[starts-with(@id, "ctl00_PlaceHolderMain_PageRendererLoader_ctl00_StationAtoZ_RepeaterContainer")]" 
+
+require 'mechanize'
+require 'nokogiri'
+
+# Start mechanize
+mechanize = Mechanize.new
+
+# get first page with list of rnli stations
+first_page = mechanize.get('http://rnli.org/aboutus/lifeboatsandstations/stations/Pages/Stations-a-z.aspx')
+
+#list out links to station pages
+station_links = first_page.search "//*[contains(@id, 'StationNavHyperLink')]"
+station_links.each do |station_name|
+	# NOTE: actual link is in cat_link["href"]
+	puts station_name.text
+end
