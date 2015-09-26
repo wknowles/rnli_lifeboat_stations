@@ -1,3 +1,5 @@
+#!/usr/bin/env ruby
+
 require 'scraperwiki'
 require 'mechanize'
 
@@ -13,8 +15,15 @@ first_page = agent.get('http://rnli.org/aboutus/lifeboatsandstations/stations/Pa
 station_links = first_page.search "//*[contains(@id, 'StationNavHyperLink')]"
 station_links.each do |station_link|
 
+
+#parse urls to individual stations
+base_rnli_url = "http://rnli.org"
+station_url = "#{base_rnli_url}#{station_link['href']}"
+
+
+
 # Write out to the sqlite database using scraperwiki library
-ScraperWiki.save_sqlite(unique_keys=["name"], data={"name"=>station_link.content, "link"=>station_link['href']})
+ScraperWiki.save_sqlite(unique_keys=["name"], data={"name"=>station_link.content, "link"=>station_url})
 
 #print out result
 #puts station_link.content
