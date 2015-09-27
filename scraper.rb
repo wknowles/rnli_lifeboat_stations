@@ -1,36 +1,48 @@
 #!/usr/bin/env ruby
 
-require 'scraperwiki'
 require 'mechanize'
+#require 'json'
+require 'scraperwiki'
 
 ScraperWiki.config = { db: 'data.sqlite', default_table_name: 'data' }
 
-# Start mechanize
 mechanize = Mechanize.new
+puts "Fetching Main Page ...\n"
+page = mechanize.get('http://rnli.org/aboutus/lifeboatsandstations/stations/Pages/Stations-a-z.aspx')
 
-# get first page with list of rnli stations and search for links to next stations
-station_links = mechanize.get('http://rnli.org/aboutus/lifeboatsandstations/stations/Pages/Stations-a-z.aspx').search("//*[contains(@id, 'StationNavHyperLink')]")
-#station_links.each { |station_link| puts station_link['href'] }
+puts "Finding Station Links\n"
+station_links = page.links_with(href: %r{^\/findmynearest\/station\/Pages\/.*})
 
-#list out links to station pages
-#station_links = station_links.search "//*[contains(@id, 'StationNavHyperLink')]"
-station_links.each do |station_link|
+#puts "#{station_links}"
 
-  #mechanize.click(station_link)
-  #station_page = station_link
-  #station_address = station_page.search "//*[@id='ctl00_PlaceHolderMain_MegaRollup_RepeaterContainer_ctl01_PageRendererLoader_ctl00_EditModePanel8']/div/table/tbody/tr[1]/td[2]/p"[0].text
-  #station_vessel = station_info.search(//*[@id='ctl00_PlaceHolderMain_MegaRollup_RepeaterContainer_ctl05_PageRendererLoader_ctl00_EditModePanel8']/table/tbody/tr[1]/td[2]/p[1]/em)[0].text
-  #puts station_address
-  #puts station_vessel
+puts "Selecting First Eight Stations\n"
+station_links = station_links[0...8]
 
-#parse urls to individual stations
-base_rnli_url = "http://rnli.org"
-station_url = "#{base_rnli_url}#{station_link['href']}"
-
-#print to screen
-#puts station_url
-
-# Write out to the sqlite database using scraperwiki library
-ScraperWiki.save_sqlite(unique_keys=["name"], data={"name"=>station_link.content, "link"=>station_url})
-
+stations = station_links.map do |link|
+  puts "Following Link to #{link} ...\n"
+  station = link.click
+  puts "Searching for Station Information\n"
+  station_meta = station.search('#ctl00_PlaceHolderMain_PrimaryContainerPanel')
+  puts "Searching for Station Name\n"
+  station_name = station_meta.search('#ctl00_PlaceHolderMain_PageRendererLoaderOnLoad_ctl00_EditModePanelDisp > h1')[0].text
+  puts "#{station_name}\n"
+  puts "Searching for Station Address\n"
+  station_address =  station_meta.search('.ms-rteTable-0 .ms-rteElement-P')[1].text
+  puts "#{station_address}\n"
+  puts "Searching for Station Telephone\n"
+  station_telephone = station_meta.search('.ms-rteTable-0 .ms-rteElement-P')[3].text
+  puts "#{station_telephone}\n"
+  {
+    station_name: station_name,
+    station_address: station_address,
+    station_telephone: station_telephone
+  }
 end
+
+puts "Saving data to sqlite\n"
+
+stations.each do |station|
+  ScraperWiki.save_sqlite([:station_name, :station_address, :station_telephone], station)
+end
+
+#puts JSON.pretty_generate(stations)
