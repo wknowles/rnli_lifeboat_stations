@@ -13,25 +13,15 @@ page = mechanize.get('http://rnli.org/aboutus/lifeboatsandstations/stations/Page
 puts "Finding Station Links\n"
 station_links = page.links_with(href: %r{^\/findmynearest\/station\/Pages\/.*})
 
-#puts "#{station_links}"
-
-puts "Selecting First Eight Stations\n"
-station_links = station_links[0...8]
+puts "Selecting First Twenty Stations\n"
+station_links = station_links[0...20]
 
 stations = station_links.map do |link|
   puts "Following Link to #{link} ...\n"
   station = link.click
-  puts "Searching for Station Information\n"
-  station_meta = station.search('#ctl00_PlaceHolderMain_PrimaryContainerPanel')
-  puts "Searching for Station Name\n"
-  station_name = station_meta.search('#ctl00_PlaceHolderMain_PageRendererLoaderOnLoad_ctl00_EditModePanelDisp > h1')[0].text
-  puts "#{station_name}\n"
-  puts "Searching for Station Address\n"
-  station_address =  station_meta.search('.ms-rteTable-0 .ms-rteElement-P')[1].text
-  puts "#{station_address}\n"
-  puts "Searching for Station Telephone\n"
-  station_telephone = station_meta.search('.ms-rteTable-0 .ms-rteElement-P')[3].text
-  puts "#{station_telephone}\n"
+  station_name = station.search('.descriptiveTitle h1')[0].text
+  station_address =  station.search('.ms-rteTable-0 .ms-rteElement-P')[1].text
+  station_telephone = station.search('.ms-rteTable-0 .ms-rteElement-P')[3].text.gsub(/\s+/,'')
   {
     station_name: station_name,
     station_address: station_address,
@@ -39,10 +29,10 @@ stations = station_links.map do |link|
   }
 end
 
-puts "Saving data to sqlite\n"
+puts "Saving to data.sqlite\n"
 
 stations.each do |station|
-  ScraperWiki.save_sqlite([:station_name, :station_address, :station_telephone], station)
+  ScraperWiki.save_sqlite([:station_name, :station_address], station)
 end
 
 #puts JSON.pretty_generate(stations)
