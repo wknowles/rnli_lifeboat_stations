@@ -1,3 +1,0 @@
-1.	clean up export to sqlite - one column of names of stations.   ##DONE
-2.	get scraper to click through to individual station pages.
-3. scrape individual station pages for data and export that to sqlite too.
