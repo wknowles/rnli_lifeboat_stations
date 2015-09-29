@@ -12,17 +12,16 @@ page = mechanize.get('http://rnli.org/aboutus/lifeboatsandstations/stations/Page
 
 puts "Finding Station Links\n"
 station_links = page.links_with(href: %r{^\/findmynearest\/station\/Pages\/.*})
-
 puts "Number of Station Links => #{station_links.length}"
 
-puts "Selecting First Twenty Stations\n"
 station_links = station_links[0...2]
+puts "Selecting #{station_links.count} stations\n"
 
 stations = station_links.map.with_index do |link, index|
-  puts "Following Link to #{link} ... number #{index}"
+  puts "Following Link to #{link} ... #{index}"
   station = link.click
   station_name = station.search('.descriptiveTitle h1')[0].text
-  station_address =  station.search('.ms-rteTable-0 .ms-rteElement-P')[1].text
+  station_address =  station.search('.ms-rteTable-0 .ms-rteElement-P')[1].text.gsub(/([a-z])([A-Z])/, '\1, \2')
   station_telephone = station.search('.ms-rteTable-0 .ms-rteElement-P')[3].text.gsub(/\s+/,'')
   {
     station_name: station_name,
