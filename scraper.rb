@@ -15,7 +15,7 @@ puts "Finding Station Links\n"
 station_links = page.links_with(href: %r{^\/findmynearest\/station\/Pages\/.*})
 puts "Number of Station Links => #{station_links.length}"
 
-station_links_total = station_links[10...247]
+station_links_total = station_links[0...10]
 puts "Selecting #{station_links_total.count} stations\n"
 
 stations = station_links_total.map.with_index do |link, index|
